@@ -1,0 +1,56 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci-cd.yml"
+    branches: [ "main" ]
+
+  pull_request:
+    paths:
+      - "frontend/**"
+    branches: [ "main" ]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test -- --watchAll=false
+
+      - name: Build React App
+        run: npm run build
+
+      - name: Deploy Frontend
+        run: |
+          echo "Deploying frontend..."
+          # Example Netlify/Vercel:
+          # npx vercel --prod
+          # or
+          # npx netlify deploy --prod
